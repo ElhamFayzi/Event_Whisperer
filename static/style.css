@@ -1,0 +1,30 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f4f8;
+    margin: 0;
+}
+
+header {
+    background-color: #2b2d42;
+    color: #fff;
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.event-card {
+    background: #fff;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
