@@ -12,6 +12,10 @@
     </header>
 
     <main>
+        {% if ranking_ok is defined and not ranking_ok %}
+        <p class="notice">Smart ranking is temporarily unavailable. Showing events by date instead.</p>
+        {% endif %}
+
         <div class="event-list">
             <div class="event-card">
                 <span class="rank-badge">#1</span>

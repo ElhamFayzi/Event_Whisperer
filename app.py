@@ -23,8 +23,6 @@ class Weather(db.Model):
 
 
 class Event(db.Model):
-    """A Ticketmaster event, enriched with distance + a weather forecast."""
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     url = db.Column(db.String(300))
@@ -99,7 +97,7 @@ def run_pipeline(interest, location):
 
     db.session.commit()
 
-    rank_stored_events(interest)
+    return rank_stored_events(interest)
 
 
 def rank_stored_events(interest):
@@ -116,6 +114,10 @@ def rank_stored_events(interest):
     ]
 
     ranking = rank_events(event_dicts, interest)
+    ranking_ok = ranking is not None
+    if ranking is None:
+        ranking = []
+
     by_id = {event.id: event for event in stored}
 
     position = 0
@@ -134,6 +136,7 @@ def rank_stored_events(interest):
             event.rank = position
 
     db.session.commit()
+    return ranking_ok
 
 
 @app.route("/")
@@ -146,11 +149,15 @@ def results():
     interest = request.form.get("interest", "")
     location = request.form.get("location", "")
 
-    run_pipeline(interest, location)
+    ranking_ok = run_pipeline(interest, location)
     events = Event.query.order_by(Event.rank).all()
 
     return render_template(
-        "results.html", interest=interest, location=location, events=events
+        "results.html",
+        interest=interest,
+        location=location,
+        events=events,
+        ranking_ok=ranking_ok,
     )
 
 

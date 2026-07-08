@@ -53,5 +53,6 @@ def rank_events(events, interest):
             },
         )
         return json.loads(response.text)
-    except Exception:
-        return [{"id": e["id"], "reason": ""} for e in events]
+    except Exception as error:
+        print(f"[genai] ranking failed, falling back to unranked order: {error}", flush=True)
+        return None
