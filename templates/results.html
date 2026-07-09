@@ -28,7 +28,7 @@
                 {% endif %}
 
                 {% if event.distance_mi is not none %}
-                <p>Distance: {{ event.distance_mi }} mi ({{ event.duration_min }} min drive)</p>
+                <p>Distance: {{ event.distance_mi }} mi from {{ location }} ({{ event.duration_min }} min drive)</p>
                 {% else %}
                 <p>Distance: unavailable</p>
                 {% endif %}

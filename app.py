@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 
 from ticketmaster import find_events
-from geocode import geocode
+from geocode import geocode, reverse_geocode
 from maps import get_distance_and_time
 from weather import get_weather_forecast
 from genai import rank_events
@@ -42,17 +42,24 @@ class Event(db.Model):
     forecast = db.relationship("Weather", backref="events", lazy=True)
 
 
-def run_pipeline(event_type, interest, location):
+def resolve_origin(location, gps_lat, gps_lon):
+    if gps_lat and gps_lon:
+        lat, lon = float(gps_lat), float(gps_lon)
+        place = reverse_geocode(lat, lon)
+        return lat, lon, (place or ""), (place or "your current location")
+
+    geo = geocode(location)
+    lat, lon = geo.get("lat"), geo.get("lon")
+    city = location.split(",")[0].strip()
+    return lat, lon, city, location
+
+
+def run_pipeline(event_type, interest, city, user_lat, user_lon):
     # Because DB is a cache of the latest search, so clear the previous one first so they don't interfere with new searches.
     Event.query.delete()
     Weather.query.delete()
     db.session.commit()
 
-    user = geocode(location)
-    user_lat = user.get("lat")
-    user_lon = user.get("lon")
-
-    city = location.split(",")[0].strip()
     events = find_events(city, event_type)
 
     for event in events:
@@ -149,15 +156,18 @@ def results():
     event_type = request.form.get("event_type", "")
     interest = request.form.get("interest", "")
     location = request.form.get("location", "")
+    gps_lat = request.form.get("user_lat", "")
+    gps_lon = request.form.get("user_lon", "")
 
-    ranking_ok = run_pipeline(event_type, interest, location)
+    lat, lon, city, origin = resolve_origin(location, gps_lat, gps_lon)
+    ranking_ok = run_pipeline(event_type, interest, city, lat, lon)
     events = Event.query.order_by(Event.rank).all()
 
     return render_template(
         "results.html",
         event_type=event_type,
         interest=interest,
-        location=location,
+        location=origin,
         events=events,
         ranking_ok=ranking_ok,
     )
